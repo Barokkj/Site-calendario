@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Concursos</title>
+    <style>
+        body {
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #E3F2FD;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #1976D2, #2196F3);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .month-selector {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #toggleMonths {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        #toggleMonths:hover {
+            transform: scale(1.1);
+        }
+
+        .month-list {
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .month-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #1976D2;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .month-btn:hover {
+            background: #1565C0;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .day {
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            background: #BBDEFB;
+            min-height: 80px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .exam-day {
+            background: #1976D2;
+            color: white;
+            cursor: pointer;
+        }
+
+        .event-title {
+            font-size: 0.8em;
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            padding: 2px;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📅 Calendário do Aprovado</h1>
+        <p>1,2,3...aprovei!</p>
+    </div>
+
+    <div class="month-selector">
+        <button id="toggleMonths">Mostrar Meses</button>
+        <div class="month-list" id="monthList"></div>
+    </div>
+
+    <div id="calendarContainer"></div>
+
+    <script>
+        const examData = {
+            '2025-05-26': {
+                title: "Abertura das incrições para o enem",
+                shortTitle: "ABERTURA ENEM",
+                tips: ["<b>🎯 ENEM 2025 — Inscrições Abertas!</b><br>Opa! Chegou a hora de dar aquele passo importante: as inscrições pro ENEM 2025 já começaram e vão até  Se você quer entrar na faculdade, conseguir bolsa de estudos ou até fazer intercâmbio, o ENEM é o caminho<br>📌 <b>Mas o que é o ENEM?</b>",
+                 "O ENEM (Exame Nacional do Ensino Médio) é uma prova aplicada pelo MEC que avalia o que você aprendeu ao longo da escola. Ele é usado como porta de entrada pra:","✅ Universidades públicas (via SISU)","✅ Bolsas de estudo em faculdades particulares (via ProUni)","✅ Financiamento estudantil (via FIES)",
+                "✅ Vagas em faculdades de Portugal que aceitam a nota do ENEM<br><b>📝 Como se inscrever:</b>","Entra no site oficial: <a href=https://enem.inep.gov.br/>https://enem.inep.gov.br/</a>","Preenche seus dados (CPF, RG, endereço, etc.)","Envia uma foto digital atual","Paga a taxa de inscrição (ou solicita isenção, se for o caso)<br><b>Tutorial de como solicitar isenção</b> <a href=https://www.youtube.com/watch?v=3KRlD5DdvOc>Aqui </a><b><br>📄 Edital oficial: <a href=https://www.gov.br/inep/pt-br/centrais-de-conteudo/legislacao/enem >Clique aqui pra acessar </a></b><b><br>💡 Dicas importantes:</b>",
+                "Anota os dias da prova no seu calendário","Começa a revisar os conteúdos principais (linguagens, matemática, humanas, natureza e redação)","E fica ligado nas atualizações!"],
+                level: "Ensino médio"
+            },
+            '2025-12-27': {
+                title: "Prova do ENEM",
+                shortTitle: "ENEM",
+                tips: ["Revise matérias básicas", "Treine gestão do tempo"],
+                level: "Nacional"
+                
+            },
+            '2025-09-08': {
+                    title: "Inscrição ESA",
+                    shortTitle: "ESA",  // Appears in calendar
+                    tips: ["dica bla bla bla", "dica ble ble ble ", "dica bli bli bli "],
+                    level: "Ensino médio"
+                },
+        };
+
+        function generateCalendar(month, year) {
+            const calendar = document.createElement('div');
+            calendar.className = 'calendar';
+            
+            const daysInMonth = new Date(year, month+1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+
+            for(let i = 0; i < firstDay; i++) {
+                calendar.appendChild(createDayElement(''));
+            }
+
+            for(let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const isExamDay = examData[dateKey];
+                calendar.appendChild(createDayElement(day, isExamDay, dateKey));
+            }
+
+            document.getElementById('calendarContainer').innerHTML = '';
+            document.getElementById('calendarContainer').appendChild(calendar);
+        }
+
+        function createDayElement(day, isExamDay, dateKey) {
+            const dayElement = document.createElement('div');
+            dayElement.className = `day ${isExamDay ? 'exam-day' : ''}`;
+            dayElement.innerHTML = day;
+            
+            if(isExamDay) {
+                const eventTitle = document.createElement('div');
+                eventTitle.className = 'event-title';
+                eventTitle.textContent = examData[dateKey].shortTitle;
+                dayElement.appendChild(eventTitle);
+                dayElement.onclick = () => showExamDetails(dateKey);
+            }
+            return dayElement;
+        }
+
+        // Month Selector
+        document.getElementById('toggleMonths').addEventListener('click', () => {
+            const monthList = document.getElementById('monthList');
+            monthList.style.display = monthList.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Initialize Months
+        const months = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 
+            'Maio', 'Junho', 'Julho', 'Agosto',
+            'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        const monthList = document.getElementById('monthList');
+        months.forEach((month, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'month-btn';
+            btn.textContent = month;
+            btn.onclick = () => generateCalendar(index, 2025);
+            monthList.appendChild(btn);
+        });
+
+        function showExamDetails(dateKey) {
+            const exam = examData[dateKey];
+            const examDetails = {
+                date: dateKey,
+                ...exam
+            };
+            localStorage.setItem('currentExam', JSON.stringify(examDetails));
+            window.location.href = 'exam-details.html';
+        }
+
+        // Generate current month initially
+        generateCalendar(0, 2025);
+    </script>
+</body>
+</html>
